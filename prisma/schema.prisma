@@ -9,11 +9,85 @@ datasource db {
   provider = "postgresql"
 }
 
-// Приклад моделі (можна видалити або змінити)
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// Енуми
+enum EmployerStatus {
+  active
+  inactive
+}
+
+enum JobStatus {
+  draft
+  active
+  archive
+}
+
+enum HistoryAction {
+  hired
+  fired
+}
+
+// Роботодавець
+model Employer {
+  id        Int            @id @default(autoincrement())
+  name      String
+  status    EmployerStatus @default(active)
+  jobs      Job[]
+  workers   Worker[]
+  history   WorkerHistory[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("employers")
+}
+
+// Вакансія
+model Job {
+  id           Int            @id @default(autoincrement())
+  status       JobStatus      @default(draft)
+  name         String
+  creationDate DateTime       @default(now())
+  salary       Decimal        @db.Decimal(10, 2)
+  employerId   Int
+  employer     Employer       @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  workers      Worker[]
+  history      WorkerHistory[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("jobs")
+}
+
+// Працівник
+model Worker {
+  id         Int             @id @default(autoincrement())
+  name       String
+  salary     Decimal         @db.Decimal(10, 2)
+  employerId Int?
+  employer   Employer?       @relation(fields: [employerId], references: [id], onDelete: SetNull)
+  jobId      Int?
+  job        Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  history    WorkerHistory[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@map("workers")
+}
+
+// Історія найму та звільнень працівника
+model WorkerHistory {
+  id           Int           @id @default(autoincrement())
+  workerId     Int
+  worker       Worker        @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  action       HistoryAction
+  date         DateTime      @default(now())
+  jobId        Int?
+  job          Job?          @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  employerId   Int?
+  employer     Employer?     @relation(fields: [employerId], references: [id], onDelete: SetNull)
+  jobName      String?
+  employerName String?
+  jobSalary    Decimal?      @db.Decimal(10, 2)
+  createdAt    DateTime      @default(now())
+
+  @@map("worker_history")
 }

@@ -50,11 +50,7 @@ npx prisma generate
 
 ```bash
 # Development режим з hot-reload
-npm run start:dev
-
-# Production режим
-npm run build
-npm run start:prod
+npx prisma generate && npm run start:dev
 ```
 
 Додаток буде доступний за адресою: **http://localhost:3000**
